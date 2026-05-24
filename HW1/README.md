@@ -73,6 +73,8 @@ The performance increase should be minimal, roughly 2-3%.
 ### Environment
 GAPBS compiled with official toolchain `arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu`.
 
+Used GAPBS NeoverseV2 config from [here](https://github.com/denislos/gem5/blob/stable/configs/example/arm/gapbs_neoverse_v2.py).
+
 ### Results
 
 | Benchmark | Baseline IPC (9 IQs) | Monolithic IPC (1 IQ) | Speedup (%) |
