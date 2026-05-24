@@ -207,6 +207,22 @@ class Neoverse_V2_IQ8(IQUnit):
     fuPool = Neoverse_V2_LoadStore_FUP()
 
 
+class Neoverse_V2_Monolithic_FUP(FUPool):
+    # 2x2 SimpleInt + 1x2 ComplexInt + 2x2 FP + (1 + 1x2) Load + (1x2) Store
+    FUList = [
+        NeoverseV2_Simple_Int(count=4),
+        NeoverseV2_Complex_Int(count=2),
+        NeoverseV2_FP(count=4),
+        NeoverseV2_Load(count=3),
+        NeoverseV2_Store(count=2)
+    ]
+
+class Neoverse_V2_Monolithic_IQ(IQUnit):
+    # (22 * 4) + (28 * 2) + (16 * 3) = 88 + 56 + 48 = 192
+    numEntries = 192
+    fuPool = Neoverse_V2_Monolithic_FUP()
+
+
 class NeoverseV2_BTB(SimpleBTB):
     numEntries = 12 * 1024
     tagBits = 18
@@ -282,17 +298,7 @@ class NeoverseV2(ArmO3CPU):
 
     # The Neoverse Scheduler
     # Configured according to https://chipsandcheese.com/p/arms-neoverse-v2-in-awss-graviton-4
-    instQueues = [
-        Neoverse_V2_IQ0(),
-        Neoverse_V2_IQ1(),
-        Neoverse_V2_IQ2(),
-        Neoverse_V2_IQ3(),
-        Neoverse_V2_IQ4(),
-        Neoverse_V2_IQ5(),
-        Neoverse_V2_IQ6(),
-        Neoverse_V2_IQ7(),
-        Neoverse_V2_IQ8(),
-    ]
+    instQueues = [ Neoverse_V2_Monolithic_IQ() ]
 
     backComSize = 5
     forwardComSize = 5
