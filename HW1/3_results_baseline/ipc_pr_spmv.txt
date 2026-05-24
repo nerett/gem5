@@ -1,0 +1,1 @@
+board.processor.cores.core.ipc               1.499859                       # IPC: instructions per cycle (core level) ((Count/Cycle))
