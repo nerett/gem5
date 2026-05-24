@@ -69,4 +69,35 @@ The performance increase should be minimal, roughly 2-3%.
 4. **HW utilization:** Expanding the fetch/decode/issue width and IQ capacity to 4 requires instruction-level parallelism to be effective. Due to the RAW chains, the issue width is dynamically restricted to 1 instruction per cycle for most of the execution.
 5. **Cycle savings:** The wider pipeline only provides an advantage during the function prologue initialization (instructions 1-5), saving approximately 2 cycles total. Execution time drops from 60 cycles to ~58 cycles.
 
-## 3. gem5
+## 3. gem5 (NeoverseV2 IPC comparison: baseline vs monolithic IQ)
+### Environment
+GAPBS compiled with official toolchain `arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu`.
+
+### Results
+
+| Benchmark | Baseline IPC (9 IQs) | Monolithic IPC (1 IQ) | Speedup (%) |
+| :--- | :---: | :---: | :---: |
+| bc | 1.400683 | 1.195867 | -14.62% |
+| bfs | 1.458106 | 1.200961 | -17.64% |
+| cc | 1.412654 | 1.189848 | -15.77% |
+| cc_sv | 1.403562 | 1.154632 | -17.74% |
+| pr | 1.384670 | 1.206768 | -12.85% |
+| pr_spmv | 1.499859 | 1.242133 | -17.18% |
+| sssp | 1.404152 | 1.205205 | -14.17% |
+| tc | 1.240104 | 1.046542 | -15.61% |
+
+![3_comparison](./3_comparison.png)
+
+### Explanation
+The simulation results show that moving from 9 distributed IQs to a single monolithic IQ decreased the IPC for all tested GAPBS benchmarks. The performance dropped by approximately 13% to 18%.
+
+This result is unexpected because a monolithic IQ is generally thought to improve performance by:
+1.  **Reducing resource fragmentation:** Allowing any instruction to use any available IQ entry, preventing stalls when one specific type of queue fills up while others are empty.
+2.  **Increasing instruction window:** A larger effective window allows the processor to find more independent instructions for parallel execution.
+
+However, the observed decrease suggests that for the Neoverse V2 model in gem5 and for these specific graph benchmarks, other factors might be at play:
+*   **Increased scheduling latency:** A very large monolithic IQ (192 entries) can have more complex and slower internal logic for "wakeup" (identifying ready instructions) and "select" (choosing instructions for execution) compared to several smaller, specialized IQs. This increased latency could slow down the entire scheduling process, hurting IPC.
+*   **workload:** Graph workloads (GAPBS) often involve many memory accesses and irregular data patterns, leading to significant memory latency. Changes in IQ design might have less impact on overall performance if the core is heavily bottlenecked by cache misses or main memory access times.
+*   **Simplifications:** The gem5 O3 CPU model for Neoverse V2 might introduce implicit overheads for a monolithic IQ that outweigh its theoretical benefits in this specific simulation setup. The model might be tuned for the distributed IQs.
+
+In summary, while monolithic IQs offer theoretical advantages, the practical implementation (or its modeling in gem5) might introduce overheads that, for the given benchmarks, lead to a reduction in overall performance.
